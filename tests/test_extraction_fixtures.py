@@ -30,6 +30,7 @@ LANG_MAP: dict[str, tuple[CommentType, str]] = {
     "yaml": (CommentType.yaml, "yaml"),
     "go": (CommentType.go, "go"),
     "jsonc": (CommentType.jsonc, "jsonc"),
+    "bash": (CommentType.bash, "sh"),
 }
 
 
