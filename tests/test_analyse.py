@@ -74,6 +74,7 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 29,
                 "num_oneline_warnings": 0,
+                "num_oneline_needs": 12,
             },
         },
         {
@@ -89,6 +90,7 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 14,
                 "num_oneline_warnings": 0,
+                "num_oneline_needs": 8,
                 "warnings_path_exists": True,
             },
         },
@@ -105,6 +107,7 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 5,
                 "num_oneline_warnings": 1,
+                "num_oneline_needs": 4,
                 "warnings_path_exists": True,
             },
         },
@@ -121,6 +124,7 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 6,
                 "num_oneline_warnings": 0,
+                "num_oneline_needs": 4,
             },
         },
         {
@@ -136,6 +140,23 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 4,
                 "num_oneline_warnings": 0,
+                "num_oneline_needs": 1,
+            },
+        },
+        {
+            "src_dir": TEST_DIR / "data" / "typescript",
+            "src_paths": [
+                TEST_DIR / "data" / "typescript" / "demo.tsx",
+            ],
+            "comment_type": "ts",
+            "oneline_comment_style": ONELINE_COMMENT_STYLE_DEFAULT,
+            "result": {
+                "num_src_files": 1,
+                "num_uncached_files": 1,
+                "num_cached_files": 0,
+                "num_comments": 1,
+                "num_oneline_warnings": 0,
+                "num_oneline_needs": 1,
             },
         },
         {
@@ -151,6 +172,7 @@ def test_analyse(src_dir, src_paths, tmp_path, snapshot_marks):
                 "num_cached_files": 0,
                 "num_comments": 4,
                 "num_oneline_warnings": 0,
+                "num_oneline_needs": 3,
             },
         },
     ],
@@ -171,6 +193,7 @@ def test_analyse_oneline_needs(tmp_path, case):
     result = case["result"]
     assert len(src_analyse.src_files) == result["num_src_files"]
     assert len(src_analyse.oneline_warnings) == result["num_oneline_warnings"]
+    assert len(src_analyse.oneline_needs) == result["num_oneline_needs"]
 
     cnt_comments = 0
     for src_file in src_analyse.src_files:

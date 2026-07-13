@@ -62,7 +62,9 @@ def init_rust_tree_sitter() -> tuple[Parser, Query]:
 
 @pytest.fixture(scope="session")
 def init_typescript_tree_sitter() -> tuple[Parser, Query]:
-    parsed_language = Language(tree_sitter_typescript.language_typescript())
+    # TSX grammar is a superset of the TypeScript grammar (parses plain .ts too),
+    # matching what utils.init_tree_sitter uses for CommentType.ts.
+    parsed_language = Language(tree_sitter_typescript.language_tsx())
     query = Query(parsed_language, utils.TYPE_SCRIPT_QUERY)
     parser = Parser(parsed_language)
     return parser, query
@@ -455,6 +457,64 @@ def test_find_associated_scope_jsonc(code, result, init_jsonc_tree_sitter):
             """,
             "method1()",
         ),
+        # leading comment on an exported function must descend into
+        # export_statement, not resolve to no scope
+        (
+            b"""
+                // @req-id: need_001
+                export function dummyFunc1() {
+                }
+            """,
+            "function dummyFunc1()",
+        ),
+        # leading comment on an exported class
+        (
+            b"""
+                // @req-id: need_001
+                export class DummyClass {
+                }
+            """,
+            "class DummyClass",
+        ),
+        # leading comment on an exported const arrow function
+        (
+            b"""
+                // @req-id: need_001
+                export const dummyFunc1 = () => {
+                };
+            """,
+            "dummyFunc1",
+        ),
+        # a plain (non-function) const between the comment and the function it
+        # documents must not steal the association
+        (
+            b"""
+                // @req-id: need_001
+                const helperFlag = true;
+                function dummyFunc1() {
+                }
+            """,
+            "function dummyFunc1()",
+        ),
+        # arrow-function const still resolves to itself
+        (
+            b"""
+                // @req-id: need_001
+                const dummyFunc1 = () => {
+                };
+            """,
+            "dummyFunc1",
+        ),
+        # JSX-returning component parses cleanly and resolves scope (.tsx content)
+        (
+            b"""
+                // @req-id: need_001
+                export function Button() {
+                    return <button>Click me</button>;
+                }
+            """,
+            "function Button()",
+        ),
     ],
 )
 def test_find_associated_scope_typescript(code, result, init_typescript_tree_sitter):
@@ -634,6 +694,23 @@ def test_find_next_scope_csharp(code, result, init_csharp_tree_sitter):
             """,
             "function dummyFunc1()",
         ),
+        (
+            b"""
+                // @req-id: need_001
+                export function dummyFunc1() {
+                }
+            """,
+            "function dummyFunc1()",
+        ),
+        (
+            b"""
+                // @req-id: need_001
+                const helperFlag = true;
+                function dummyFunc1() {
+                }
+            """,
+            "function dummyFunc1()",
+        ),
     ],
 )
 def test_find_next_scope_typescript(code, result, init_typescript_tree_sitter):
@@ -644,6 +721,21 @@ def test_find_next_scope_typescript(code, result, init_typescript_tree_sitter):
     assert node.text
     func_def = node.text.decode("utf-8")
     assert result in func_def
+
+
+def test_find_associated_scope_typescript_jsx_no_parse_error(
+    init_typescript_tree_sitter,
+):
+    """A JSX-returning component must parse cleanly under the TSX grammar."""
+    code = b"""
+        // @req-id: need_001
+        export function Button() {
+            return <button>Click me</button>;
+        }
+    """
+    parser, _ = init_typescript_tree_sitter
+    tree = parser.parse(code)
+    assert not tree.root_node.has_error
 
 
 @pytest.mark.parametrize(
