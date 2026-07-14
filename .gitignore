@@ -30,3 +30,6 @@ invalid_objs.json
 .tox
 
 output/
+
+# Claude Code per-user local settings
+.claude/settings.local.json
