@@ -192,7 +192,15 @@ class _CliBackend:
 
     The summary is INFO (stdout, hidden by ``--quiet``); the breakdown is DEBUG
     (stdout, shown only with ``--verbose``); warnings go to stderr.
+
+    This is also the single choke point where standalone warnings are dropped
+    by ``suppress_warnings`` and the surviving ones counted, so ``--strict``
+    can fail the run on any non-suppressed warning.
     """
+
+    def __init__(self, suppress_warnings: Iterable[str] = ()) -> None:
+        self.suppress_warnings: tuple[str, ...] = tuple(suppress_warnings)
+        self.warning_count = 0
 
     def debug(self, _name: str, msg: str, _location: str | None, /) -> None:
         logger.debug(msg)
@@ -201,11 +209,16 @@ class _CliBackend:
         logger.info(msg)
 
     def warning(
-        self, _name: str, msg: str, _subtype: str, _location: str | None, /
+        self, _name: str, msg: str, subtype: str, _location: str | None, /
     ) -> None:
+        slug = f"codelinks.{subtype}" if subtype else "codelinks"
+        if is_suppressed(slug, self.suppress_warnings):
+            return
+        self.warning_count += 1
         # reserve stderr for warnings/errors (the rich logger prints to stdout
-        # by default; route this to the error console explicitly)
-        logger.warning(msg, console=logger.err_console)
+        # by default; route this to the error console explicitly). The slug is
+        # appended so users know what to add to ``suppress_warnings``.
+        logger.warning(f"{msg} [{slug}]", console=logger.err_console)
 
 
 class _SphinxBackend:
@@ -280,10 +293,31 @@ def get_logger(name: str) -> CodelinksLogger:
     return CodelinksLogger(name)
 
 
-def configure_cli(verbose: bool = False, quiet: bool = False) -> None:
+def configure_cli(
+    verbose: bool = False,
+    quiet: bool = False,
+    suppress_warnings: Iterable[str] = (),
+) -> None:
     """Select the CLI frontend and configure the rich logger's verbosity."""
     logger.configure(verbose=verbose, quiet=quiet)
-    _dispatch.backend = _CliBackend()
+    _dispatch.backend = _CliBackend(suppress_warnings)
+
+
+def set_cli_suppress_warnings(patterns: Iterable[str]) -> None:
+    """Set the CLI suppression list on the active backend.
+
+    The standalone CLI configures logging before it has parsed the TOML config,
+    so the suppression list is applied here once it is known. No-op unless the
+    CLI backend is active.
+    """
+    if isinstance(_dispatch.backend, _CliBackend):
+        _dispatch.backend.suppress_warnings = tuple(patterns)
+
+
+def cli_warning_count() -> int:
+    """Number of non-suppressed warnings emitted through the CLI backend."""
+    backend = _dispatch.backend
+    return backend.warning_count if isinstance(backend, _CliBackend) else 0
 
 
 def configure_sphinx() -> None:

@@ -157,6 +157,62 @@ def test_registry_lists_all_warning_slugs():
     )
 
 
+def test_cli_backend_counts_non_suppressed_warnings(capsys):
+    """The CLI backend is the single choke point that counts warnings and
+    surfaces each slug so users know what to suppress."""
+    logmod.configure_cli()
+    log = logmod.get_logger("sphinx_codelinks.analyse.sample")
+
+    log.warning("git root not found", subtype="git.root")
+    log.warning("too many fields", subtype="marker.too_many_fields")
+
+    err = capsys.readouterr().err
+    assert logmod.cli_warning_count() == 2
+    assert "git root not found" in err
+    assert "codelinks.git.root" in err
+    assert "codelinks.marker.too_many_fields" in err
+
+
+def test_cli_backend_drops_suppressed_warnings(capsys):
+    """A suppressed warning is neither printed nor counted."""
+    logmod.configure_cli(suppress_warnings=["codelinks.git"])
+    log = logmod.get_logger("sphinx_codelinks.analyse.sample")
+
+    log.warning("git root not found", subtype="git.root")
+    log.warning("too many fields", subtype="marker.too_many_fields")
+
+    err = capsys.readouterr().err
+    assert logmod.cli_warning_count() == 1
+    assert "git root not found" not in err
+    assert "too many fields" in err
+
+
+def test_cli_backend_without_subtype_uses_bare_codelinks_slug(capsys):
+    """A warning without a subtype still counts and is suppressible via the
+    bare ``codelinks`` slug."""
+    logmod.configure_cli(suppress_warnings=["codelinks"])
+    logmod.get_logger("x").warning("no subtype")
+    assert logmod.cli_warning_count() == 0
+    assert capsys.readouterr().err == ""
+
+
+def test_set_cli_suppress_warnings_updates_active_backend(capsys):
+    """The suppression list can be set after the backend is configured (the
+    CLI learns it only once the TOML config is loaded)."""
+    logmod.configure_cli()
+    logmod.set_cli_suppress_warnings(["codelinks"])
+    logmod.get_logger("x").warning("anything", subtype="git.root")
+
+    assert logmod.cli_warning_count() == 0
+    assert capsys.readouterr().err == ""
+
+
+def test_cli_warning_count_is_zero_without_a_cli_backend():
+    """Querying the count under the default/library backend is safe."""
+    logmod.reset()
+    assert logmod.cli_warning_count() == 0
+
+
 @pytest.mark.parametrize(
     ("slug", "patterns", "expected"),
     [
