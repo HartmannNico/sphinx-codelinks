@@ -14,7 +14,12 @@ from sphinx_codelinks.config import (
     CodeLinksProjectConfigType,
     generate_project_configs,
 )
-from sphinx_codelinks.logger import configure_cli, get_logger
+from sphinx_codelinks.logger import (
+    cli_warning_count,
+    configure_cli,
+    get_logger,
+    set_cli_suppress_warnings,
+)
 from sphinx_codelinks.needextend_write import MarkedObjType, convert_marked_content
 from sphinx_codelinks.source_discover.config import (
     CommentType,
@@ -50,6 +55,16 @@ OptQuiet: TypeAlias = Annotated[  # noqa: UP040 # has to be TypeAlias
         "--quiet",
         is_flag=True,
         help="Only show errors and warnings",
+        rich_help_panel="Logging",
+    ),
+]
+OptStrict: TypeAlias = Annotated[  # noqa: UP040 # has to be TypeAlias
+    bool,
+    typer.Option(
+        ...,
+        "-W",
+        "--strict",
+        help="Treat warnings as errors: exit 1 if any non-suppressed warning is emitted",
         rich_help_panel="Logging",
     ),
 ]
@@ -90,6 +105,7 @@ def analyse(  # noqa: PLR0912   # for CLI, so it needs the branches
     ] = None,
     verbose: OptVerbose = False,
     quiet: OptQuiet = False,
+    strict: OptStrict = False,
 ) -> None:
     """Analyse marked content in source code."""
     # @CLI command to analyse source code and extract traceability markers, IMPL_CLI_ANALYZE, impl, [FE_CLI_ANALYZE]
@@ -102,6 +118,11 @@ def analyse(  # noqa: PLR0912   # for CLI, so it needs the branches
         generate_project_configs(codelinks_config.projects)
     except TypeError as e:
         raise typer.BadParameter(str(e)) from e
+
+    # Apply warning suppression now that the config is known, so both the
+    # git-metadata warnings (emitted during the run) and the marker warnings
+    # (emitted below) are dropped and left uncounted at one choke point.
+    set_cli_suppress_warnings(codelinks_config.suppress_warnings)
 
     errors: deque[str] = deque()
     if outdir:
@@ -175,6 +196,10 @@ def analyse(  # noqa: PLR0912   # for CLI, so it needs the branches
             )
 
     analyse_projects.dump_markers()
+
+    # Mirror ``sphinx-build -W``: any non-suppressed warning fails the run.
+    if strict and cli_warning_count() > 0:
+        raise typer.Exit(code=1)
 
 
 @app.command(no_args_is_help=True)

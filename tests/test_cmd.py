@@ -152,6 +152,97 @@ def test_analyse_warnings_carry_codelinks_marker_slug(tmp_path: Path) -> None:
     assert "codelinks.marker.too_many_fields" in result.output
 
 
+def test_analyse_without_strict_exits_zero_despite_warnings(tmp_path: Path) -> None:
+    """Default behavior is unchanged: warnings are printed but never fail."""
+    config_file = _oneline_warning_config(tmp_path)
+    result = runner.invoke(app, ["analyse", str(config_file)])
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize("flag", ["-W", "--strict"])
+def test_analyse_strict_exits_one_on_a_surviving_warning(
+    flag: str, tmp_path: Path
+) -> None:
+    """--strict turns a surviving warning into exit 1, like ``sphinx-build -W``.
+    Git warnings are suppressed so the marker warning is the deterministic
+    trigger regardless of the checkout's git layout."""
+    config_file = _oneline_warning_config(
+        tmp_path, suppress_warnings=["codelinks.git"]
+    )
+    result = runner.invoke(app, ["analyse", str(config_file), flag])
+    assert result.exit_code == 1
+
+
+def test_analyse_strict_passes_when_the_warning_is_suppressed(tmp_path: Path) -> None:
+    """An exact-leaf suppression of the only warning makes --strict pass."""
+    config_file = _oneline_warning_config(
+        tmp_path,
+        suppress_warnings=["codelinks.git", "codelinks.marker.too_many_fields"],
+    )
+    result = runner.invoke(app, ["analyse", str(config_file), "-W"])
+    assert result.exit_code == 0
+
+
+def test_analyse_strict_still_fails_when_a_different_slug_is_suppressed(
+    tmp_path: Path,
+) -> None:
+    """Suppression is precise: silencing an unrelated leaf leaves the real one."""
+    config_file = _oneline_warning_config(
+        tmp_path,
+        suppress_warnings=["codelinks.git", "codelinks.marker.too_few_fields"],
+    )
+    result = runner.invoke(app, ["analyse", str(config_file), "-W"])
+    assert result.exit_code == 1
+
+
+def _empty_git_repo_config(
+    tmp_path: Path, suppress: list[str] | None = None
+) -> Path:
+    """A config whose explicit git_root has an empty ``.git`` (forcing git.*
+    warnings) over a marker-free source (no marker warnings) — a deterministic
+    way to exercise the git-warning arm of --strict."""
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    src_dir = repo / "src"
+    src_dir.mkdir()
+    (src_dir / "plain.c").write_text("void f(void) {}\n")
+    (tmp_path / "out").mkdir()
+    codelinks: dict = {
+        "outdir": str(tmp_path / "out"),
+        "projects": {
+            "p": {
+                "source_discover": {
+                    "src_dir": str(src_dir),
+                    "gitignore": False,
+                    "include": ["*.c"],
+                    "comment_type": "cpp",
+                },
+                "analyse": {"get_oneline_needs": True, "git_root": str(repo)},
+            }
+        },
+    }
+    if suppress is not None:
+        codelinks["suppress_warnings"] = suppress
+    config_file = tmp_path / "git_config.toml"
+    with config_file.open("w", encoding="utf-8") as f:
+        toml.dump({"codelinks": codelinks}, f)
+    return config_file
+
+
+def test_analyse_strict_exits_one_on_a_git_warning(tmp_path: Path) -> None:
+    config_file = _empty_git_repo_config(tmp_path)
+    result = runner.invoke(app, ["analyse", str(config_file), "-W"])
+    assert result.exit_code == 1
+
+
+def test_analyse_strict_git_family_suppression_clears_git_warnings(
+    tmp_path: Path,
+) -> None:
+    config_file = _empty_git_repo_config(tmp_path, suppress=["codelinks.git"])
+    result = runner.invoke(app, ["analyse", str(config_file), "-W"])
+    assert result.exit_code == 0
+
+
 def test_analyse_logs_per_project_summary_and_gates_detail(tmp_path: Path) -> None:
     """Each project gets a default-visible ``codelinks [<project>]`` summary with
     counts; the per-type breakdown is gated behind --verbose; --quiet silences it."""
