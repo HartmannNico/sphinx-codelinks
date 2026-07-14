@@ -3,6 +3,29 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+New and Improved
+................
+
+- ✨ Added a ``-W`` / ``--strict`` flag to ``codelinks analyse``.
+
+  With the flag, ``analyse`` exits ``1`` if any non-suppressed warning was
+  emitted (mirroring ``sphinx-build -W``), so warnings can gate CI/CD pipelines.
+  Without it, behaviour is unchanged.
+
+- ✨ Added a shared ``suppress_warnings`` configuration option.
+
+  A single ``[codelinks] suppress_warnings`` list of hierarchical slugs
+  (e.g. ``codelinks.git`` or ``codelinks.marker.too_many_fields``) silences
+  warnings for both the CLI and the Sphinx extension. In Sphinx the slugs are
+  folded into the native ``suppress_warnings``.
+
+- 👌 Normalised warning slugs under the ``codelinks.git.*`` and
+  ``codelinks.marker.*`` namespaces (previously ``codelinks.git_*`` and
+  ``need.*``).
+
 .. _`release:1.3.0`:
 
 1.3.0

@@ -4,6 +4,10 @@ set_local_url = true            # Set to true to enable local code html and URL 
 local_url_field = "local-url"   # Need's field name for local URL
 set_remote_url = true           # Set to true to enable remote url to be generated
 remote_url_field = "remote-url" # Need's field name for remote URL
+# Silence best-effort git-metadata warnings so the strict (-nW) docs build is not
+# tripped when building from a git worktree (packed refs). See the CLI docs for
+# the -W / suppress_warnings feature this dogfoods.
+suppress_warnings = ["codelinks.git"]
 
 # Configuration for source tracing project "dcdc"
 [codelinks.projects.dcdc]

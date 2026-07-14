@@ -112,6 +112,52 @@ Specifies the output directory for generated artifacts such as extracted markers
    [codelinks]
    outdir = "output"
 
+.. _`suppress_warnings`:
+
+suppress_warnings
+~~~~~~~~~~~~~~~~~
+
+A list of warning *slugs* to silence. The same list is honoured by both the
+standalone ``analyse`` command and the Sphinx extension, so suppression is
+configured once.
+
+**Type:** ``list[str]``
+**Default:** ``[]``
+
+.. code-block:: toml
+
+   [codelinks]
+   suppress_warnings = ["codelinks.git", "codelinks.marker.too_many_fields"]
+
+Slugs are matched hierarchically, so a parent silences everything beneath it:
+
+- ``codelinks`` — every ``Sphinx-CodeLinks`` warning
+- ``codelinks.git`` — the whole git-metadata family
+- ``codelinks.git.root`` — just that one warning
+
+The available slugs are:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Family
+     - Slugs
+   * - git metadata
+     - ``codelinks.git.root``, ``codelinks.git.config``, ``codelinks.git.remote``,
+       ``codelinks.git.head``, ``codelinks.git.ref``, ``codelinks.git.host``
+   * - one-line marker
+     - ``codelinks.marker.too_many_fields``, ``codelinks.marker.too_few_fields``,
+       ``codelinks.marker.missing_square_brackets``,
+       ``codelinks.marker.not_start_or_end_with_square_brackets``,
+       ``codelinks.marker.newline_in_field``
+
+Suppressed warnings are dropped entirely: they are neither printed nor counted
+towards the ``--strict`` exit code (see :ref:`cli`). In Sphinx the same slugs are
+folded into the native ``suppress_warnings``, so ``sphinx-build`` and
+``sphinx-build -W`` honour them too; any slugs already set in ``conf.py`` are
+preserved.
+
 Project-Specific Options
 ------------------------
 
