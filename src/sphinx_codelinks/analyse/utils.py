@@ -345,7 +345,7 @@ def locate_git_root(src_dir: Path) -> Path | None:
             return parent
     logger.warning(
         f"git root is not found in the parent of {src_dir}",
-        subtype="git_root",
+        subtype="git.root",
         location=str(src_dir),
     )
     return None
@@ -357,7 +357,7 @@ def get_remote_url(git_root: Path, remote_name: str = "origin") -> str | None:
     if not config_path.exists():
         logger.warning(
             f"{config_path} does not exist",
-            subtype="git_config",
+            subtype="git.config",
             location=str(config_path),
         )
         return None
@@ -370,7 +370,7 @@ def get_remote_url(git_root: Path, remote_name: str = "origin") -> str | None:
         return url
     logger.warning(
         f"remote-url is not found in {config_path}",
-        subtype="git_remote",
+        subtype="git.remote",
         location=str(config_path),
     )
     return None
@@ -382,7 +382,7 @@ def get_current_rev(git_root: Path) -> str | None:
     if not head_path.exists():
         logger.warning(
             f"{head_path} does not exist",
-            subtype="git_head",
+            subtype="git.head",
             location=str(head_path),
         )
         return None
@@ -396,7 +396,7 @@ def get_current_rev(git_root: Path) -> str | None:
     if not ref_path.exists():
         logger.warning(
             f"{ref_path} does not exist",
-            subtype="git_ref",
+            subtype="git.ref",
             location=str(ref_path),
         )
         return None
@@ -411,7 +411,7 @@ def form_https_url(
     if not template:
         logger.warning(
             f"Unsupported Git host: {parsed_url.platform}",
-            subtype="git_host",
+            subtype="git.host",
         )
         return git_url
     https_url = template.format(

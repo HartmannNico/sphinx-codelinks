@@ -24,7 +24,7 @@ def test_default_backend_drops_info_and_emits_warning(caplog):
     log = logmod.get_logger("sphinx_codelinks.analyse.sample")
 
     log.info("routine progress")
-    log.warning("real problem", subtype="git_root")
+    log.warning("real problem", subtype="git.root")
 
     messages = [record.getMessage() for record in caplog.records]
     assert "routine progress" not in messages
@@ -37,7 +37,7 @@ def test_cli_backend_routes_info_to_stdout_and_warning_to_stderr(capsys):
     log = logmod.get_logger("sphinx_codelinks.analyse.sample")
 
     log.info("files loaded: 3")
-    log.warning("git root not found", subtype="git_root")
+    log.warning("git root not found", subtype="git.root")
 
     captured = capsys.readouterr()
     assert "files loaded: 3" in captured.out
@@ -52,7 +52,7 @@ def test_cli_backend_quiet_suppresses_info_but_keeps_warning(capsys):
     log = logmod.get_logger("sphinx_codelinks.analyse.sample")
 
     log.info("files loaded: 3")
-    log.warning("git root not found", subtype="git_root")
+    log.warning("git root not found", subtype="git.root")
 
     captured = capsys.readouterr()
     assert "files loaded: 3" not in captured.out
@@ -93,7 +93,7 @@ def test_sphinx_backend_routes_through_sphinx_logging():
         log = logmod.get_logger("sphinx_codelinks.analyse.sample")
         log.info("project summary")
         log.debug("breakdown detail")
-        log.warning("git root not found", subtype="git_root", location="x.cpp")
+        log.warning("git root not found", subtype="git.root", location="x.cpp")
     finally:
         sphinx_logger.removeHandler(handler)
         sphinx_logger.setLevel(old_level)
@@ -115,7 +115,7 @@ def test_sphinx_backend_routes_through_sphinx_logging():
     assert warn_records
     assert warn_records[0].levelno == logging.WARNING
     assert getattr(warn_records[0], "type", None) == "codelinks"
-    assert getattr(warn_records[0], "subtype", None) == "git_root"
+    assert getattr(warn_records[0], "subtype", None) == "git.root"
 
 
 ANALYSE_MODULE_LOGGERS = (
@@ -243,3 +243,41 @@ def test_cli_warning_count_is_zero_without_a_cli_backend():
 )
 def test_is_suppressed(slug, patterns, expected):
     assert logmod.is_suppressed(slug, patterns) is expected
+
+
+def test_git_metadata_warnings_use_dotted_codelinks_slugs(tmp_path, capsys):
+    """Every git-metadata warning surfaces under ``codelinks.git.<name>`` so it
+    is suppressible with the same hierarchical slugs as marker warnings."""
+    from sphinx_codelinks.analyse import utils
+
+    logmod.configure_cli()
+
+    # git.root: no .git anywhere above the directory
+    utils.locate_git_root(tmp_path / "no_repo")
+
+    repo = tmp_path / "repo"
+    (repo / ".git").mkdir(parents=True)
+    # git.config: .git exists but no config file
+    utils.get_remote_url(repo)
+    # git.remote: config present but no remote url
+    (repo / ".git" / "config").write_text("[core]\n")
+    utils.get_remote_url(repo)
+    # git.head: no .git/HEAD
+    utils.get_current_rev(repo)
+    # git.ref: HEAD points at a ref file that does not exist
+    (repo / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    utils.get_current_rev(repo)
+    # git.host: unsupported git hosting platform
+    utils.form_https_url("git@bitbucket.org:o/r.git", "rev", repo, repo / "f.c", 1)
+
+    err = capsys.readouterr().err
+    for slug in (
+        "codelinks.git.root",
+        "codelinks.git.config",
+        "codelinks.git.remote",
+        "codelinks.git.head",
+        "codelinks.git.ref",
+        "codelinks.git.host",
+    ):
+        assert slug in err, f"missing {slug} in:\n{err}"
+    assert logmod.cli_warning_count() == 6
