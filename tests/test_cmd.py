@@ -116,6 +116,42 @@ def test_analyse_outputs_warnings(tmp_path: Path) -> None:
     assert "too_many_fields" in result.output
 
 
+def _oneline_warning_config(tmp_path: Path, **extra: object) -> Path:
+    """Write a config whose default one-line style makes the sample file warn."""
+    src_dir = TEST_DIR / "data" / "oneline_comment_default"
+    config_dict: dict = {
+        "codelinks": {
+            "outdir": str(tmp_path),
+            "projects": {
+                "test_project": {
+                    "source_discover": {
+                        "src_dir": str(src_dir),
+                        "include": ["*.c"],
+                        "comment_type": "cpp",
+                    },
+                    "analyse": {"get_oneline_needs": True},
+                }
+            },
+            **extra,
+        }
+    }
+    config_file = tmp_path / "test_config.toml"
+    with config_file.open("w", encoding="utf-8") as f:
+        toml.dump(config_dict, f)
+    return config_file
+
+
+def test_analyse_warnings_carry_codelinks_marker_slug(tmp_path: Path) -> None:
+    """Marker warnings surface with their ``codelinks.marker.<subtype>`` slug so
+    they can be suppressed and counted like every other warning."""
+    config_file = _oneline_warning_config(tmp_path)
+
+    result = runner.invoke(app, ["analyse", str(config_file)])
+
+    assert result.exit_code == 0
+    assert "codelinks.marker.too_many_fields" in result.output
+
+
 def test_analyse_logs_per_project_summary_and_gates_detail(tmp_path: Path) -> None:
     """Each project gets a default-visible ``codelinks [<project>]`` summary with
     counts; the per-type breakdown is gated behind --verbose; --quiet silences it."""

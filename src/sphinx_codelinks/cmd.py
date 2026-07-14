@@ -14,7 +14,7 @@ from sphinx_codelinks.config import (
     CodeLinksProjectConfigType,
     generate_project_configs,
 )
-from sphinx_codelinks.logger import configure_cli, logger
+from sphinx_codelinks.logger import configure_cli, get_logger
 from sphinx_codelinks.needextend_write import MarkedObjType, convert_marked_content
 from sphinx_codelinks.source_discover.config import (
     CommentType,
@@ -161,12 +161,17 @@ def analyse(  # noqa: PLR0912   # for CLI, so it needs the branches
     analyse_projects = AnalyseProjects(codelinks_config)
     analyse_projects.run()
 
-    # Output warnings to console for CLI users
+    # Surface one-line marker warnings through the logging facade so they pass
+    # the same suppress/count choke point as git-metadata warnings; the slug is
+    # appended by the backend.
+    clog = get_logger(__name__)
     for src_analyse in analyse_projects.projects_analyse.values():
         for warning in src_analyse.oneline_warnings:
-            logger.warning(
+            clog.warning(
                 f"Oneline parser warning in {warning.file_path}:{warning.lineno} "
-                f"- {warning.sub_type}: {warning.msg}",
+                f"- {warning.msg}",
+                subtype=f"marker.{warning.sub_type}",
+                location=f"{warning.file_path}:{warning.lineno}",
             )
 
     analyse_projects.dump_markers()
