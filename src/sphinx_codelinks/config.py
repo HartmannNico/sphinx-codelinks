@@ -662,6 +662,26 @@ class CodeLinksConfig:
     )
     """The field name for the remote URL in the extracted need."""
 
+    suppress_warnings: list[str] = field(
+        default_factory=list,
+        metadata={
+            "rebuild": "env",
+            "types": (list,),
+            "schema": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+    )
+    """Warning slugs to silence, e.g.
+    ``["codelinks.git", "codelinks.marker.too_many_fields"]``.
+
+    Matched hierarchically: ``codelinks`` silences everything, ``codelinks.git``
+    the whole git-metadata family, ``codelinks.git.root`` just one. Honoured by
+    the standalone ``analyse`` command (matching warnings are dropped and not
+    counted for ``--strict``) and folded into Sphinx's native
+    ``suppress_warnings`` for the extension."""
+
     outdir: Path = field(
         default=Path("output"),
         metadata={"rebuild": "env", "types": (str), "schema": {"type": "string"}},

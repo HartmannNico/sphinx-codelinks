@@ -1,7 +1,12 @@
 # @Test suite for source analysis configuration validation, TEST_CONF_1, test, [IMPL_OLP_1]
 import pytest
 
-from sphinx_codelinks.config import OneLineCommentStyle, SourceAnalyseConfig
+from sphinx_codelinks.config import (
+    CodeLinksConfig,
+    OneLineCommentStyle,
+    SourceAnalyseConfig,
+    check_schema,
+)
 
 from .conftest import TEST_DIR
 
@@ -209,3 +214,25 @@ def test_oneline_schema_validator_negative(oneline_config, result):
 )
 def test_oneline_schema_validator_positive(oneline_config):
     assert len(oneline_config.check_fields_configuration()) == 0
+
+
+def test_suppress_warnings_is_a_config_field_defaulting_empty():
+    assert "suppress_warnings" in CodeLinksConfig.field_names()
+    assert CodeLinksConfig().suppress_warnings == []
+
+
+def test_suppress_warnings_accepts_a_list_of_slugs():
+    config = CodeLinksConfig(
+        suppress_warnings=["codelinks.git", "codelinks.marker.too_many_fields"]
+    )
+    assert config.suppress_warnings == [
+        "codelinks.git",
+        "codelinks.marker.too_many_fields",
+    ]
+    assert check_schema(config) == []
+
+
+def test_suppress_warnings_schema_rejects_non_list():
+    config = CodeLinksConfig(suppress_warnings="codelinks.git")  # must be a list
+    errors = check_schema(config)
+    assert any("suppress_warnings" in error for error in errors)
