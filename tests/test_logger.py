@@ -245,6 +245,49 @@ def test_is_suppressed(slug, patterns, expected):
     assert logmod.is_suppressed(slug, patterns) is expected
 
 
+@pytest.mark.parametrize(
+    ("entries", "expected"),
+    [
+        # a family expands to its concrete leaves (plus itself), so Sphinx's
+        # flat matcher can silence the whole family
+        (
+            ["codelinks.git"],
+            [
+                "codelinks.git",
+                "codelinks.git.root",
+                "codelinks.git.config",
+                "codelinks.git.remote",
+                "codelinks.git.head",
+                "codelinks.git.ref",
+                "codelinks.git.host",
+            ],
+        ),
+        # an exact leaf stays a single token
+        (["codelinks.git.root"], ["codelinks.git.root"]),
+        # the top-level expands to itself plus every known slug
+        (["codelinks"], ["codelinks", *logmod.CODELINKS_WARNING_SLUGS]),
+        # a non-codelinks entry passes through unchanged
+        (["ref.term"], ["ref.term"]),
+        # duplicates across entries are removed, order preserved
+        (
+            ["codelinks.git.root", "codelinks.git"],
+            [
+                "codelinks.git.root",
+                "codelinks.git",
+                "codelinks.git.config",
+                "codelinks.git.remote",
+                "codelinks.git.head",
+                "codelinks.git.ref",
+                "codelinks.git.host",
+            ],
+        ),
+        ([], []),
+    ],
+)
+def test_expand_suppress_for_sphinx(entries, expected):
+    assert logmod.expand_suppress_for_sphinx(entries) == expected
+
+
 def test_git_metadata_warnings_use_dotted_codelinks_slugs(tmp_path, capsys):
     """Every git-metadata warning surfaces under ``codelinks.git.<name>`` so it
     is suppressible with the same hierarchical slugs as marker warnings."""

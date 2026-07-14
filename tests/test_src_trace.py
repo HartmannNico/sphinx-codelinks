@@ -239,6 +239,41 @@ def test_build_html(
     assert app.env.get_doctree("index") == snapshot_doctree
 
 
+def test_suppress_warnings_folded_into_sphinx_native(
+    tmpdir: Path,
+    make_app: Callable[..., SphinxTestApp],
+) -> None:
+    """The shared ``[codelinks] suppress_warnings`` is folded into Sphinx's
+    native ``suppress_warnings`` (expanded for its flat matcher) and stays
+    additive with any ``conf.py`` entry."""
+    this_file_dir = Path(__file__).parent
+    project = Path("doc_test") / "minimum_config"
+    sphinx_src_dir = Path(tmpdir) / project
+    shutil.copytree(this_file_dir / project, sphinx_src_dir, dirs_exist_ok=True)
+
+    # a native conf.py entry must survive the fold (stays additive)
+    conf_py = sphinx_src_dir / "conf.py"
+    conf_py.write_text(conf_py.read_text() + '\nsuppress_warnings = ["ref.term"]\n')
+
+    # the shared codelinks list, expressed hierarchically
+    (sphinx_src_dir / "src_trace.toml").write_text(
+        "[codelinks]\n"
+        'suppress_warnings = ["codelinks.git", "codelinks.marker.too_many_fields"]\n\n'
+        "[codelinks.projects.src]\n"
+        'remote_url_pattern = '
+        '"https://github.com/useblocks/sphinx-codelinks/blob/{commit}/{path}#L{line}"\n'
+    )
+
+    app = make_app(srcdir=sphinx_src_dir, freshenv=True)
+    app.build()
+
+    suppressed = app.config.suppress_warnings
+    assert "ref.term" in suppressed  # conf.py entry preserved
+    assert "codelinks.git.root" in suppressed  # family expanded to concrete slugs
+    assert "codelinks.git.host" in suppressed
+    assert "codelinks.marker.too_many_fields" in suppressed  # exact leaf kept
+
+
 def test_incremental_build_keeps_src_trace_projects_unchanged(
     tmpdir: Path,
     make_app: Callable[..., SphinxTestApp],

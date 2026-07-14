@@ -152,6 +152,28 @@ def is_suppressed(slug: str, patterns: Iterable[str]) -> bool:
     return False
 
 
+def expand_suppress_for_sphinx(entries: Iterable[str]) -> list[str]:
+    """Expand hierarchical codelinks slugs into the flat tokens Sphinx's
+    ``suppress_warnings`` matcher understands.
+
+    Sphinx only matches an exact ``type`` / ``type.subtype`` or a ``type.*``
+    wildcard, so a family entry like ``codelinks.git`` would silence nothing on
+    its own. Each entry therefore keeps itself and gains every registry slug it
+    covers, so a family or the top-level entry silences its members under Sphinx
+    too. Non-codelinks entries pass through unchanged; order is stable and
+    duplicates are removed.
+    """
+    expanded: list[str] = []
+    seen: set[str] = set()
+    for entry in entries:
+        covered = [s for s in CODELINKS_WARNING_SLUGS if is_suppressed(s, [entry])]
+        for token in (entry, *covered):
+            if token not in seen:
+                seen.add(token)
+                expanded.append(token)
+    return expanded
+
+
 class _Backend(Protocol):
     """Where the ``analyse`` layer's log records are routed.
 

@@ -26,7 +26,7 @@ from sphinx_codelinks.config import (
     file_lineno_href,
     generate_project_configs,
 )
-from sphinx_codelinks.logger import configure_sphinx
+from sphinx_codelinks.logger import configure_sphinx, expand_suppress_for_sphinx
 from sphinx_codelinks.sphinx_extension import debug
 from sphinx_codelinks.sphinx_extension.directives.src_trace import (
     SourceTracing,
@@ -104,6 +104,9 @@ def setup(app: Sphinx) -> dict[str, Any]:  # type: ignore[explicit-any]
     app.connect(
         "config-inited", update_sn_extra_options, priority=11
     )  # run early otherwise, extra options are not set for nested_parse
+    app.connect(
+        "config-inited", fold_suppress_warnings, priority=12
+    )  # after the TOML config has populated src_trace_suppress_warnings
     app.connect("config-inited", update_sn_types)
     app.connect("config-inited", check_sphinx_configuration)
 
@@ -212,6 +215,23 @@ def set_config_to_sphinx(
         config[f"src_trace_{key}"] = value
 
 
+def fold_suppress_warnings(_app: Sphinx, config: _SphinxConfig) -> None:
+    """Fold the shared codelinks ``suppress_warnings`` into Sphinx's native one.
+
+    A single ``[codelinks] suppress_warnings`` list drives both frontends. Here
+    it is merged into Sphinx's native ``suppress_warnings`` so ``sphinx-build``
+    and ``sphinx-build -W`` honour it. Hierarchical slugs are expanded for
+    Sphinx's flat matcher, and the merge is additive so any ``conf.py`` entry is
+    preserved. Runs after :func:`load_config_from_toml` (which populates
+    ``src_trace_suppress_warnings``).
+    """
+    extra = expand_suppress_for_sphinx(config["src_trace_suppress_warnings"])
+    if not extra:
+        return
+    existing = list(config["suppress_warnings"])
+    config["suppress_warnings"] = existing + [x for x in extra if x not in existing]
+
+
 def update_sn_extra_options(app: Sphinx, config: _SphinxConfig) -> None:
     src_trace_sphinx_config = CodeLinksConfig.from_sphinx(config)
     _register_sn_field(app, "project", "Source-tracing project")
@@ -264,6 +284,6 @@ def emit_warnings(
     for warning in warnings:
         logger.warning(
             f"{warning.file_path}:{warning.lineno}: {warning.msg}",
-            type=warning.type,
-            subtype=warning.sub_type,
+            type="codelinks",
+            subtype=f"marker.{warning.sub_type}",
         )
