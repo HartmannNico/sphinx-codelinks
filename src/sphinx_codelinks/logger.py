@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import logging
 from typing import Protocol
 
@@ -115,6 +116,40 @@ logger = Logger()
 # * Sphinx -> ``sphinx.util.logging`` (respects verbosity, colour,
 #   ``suppress_warnings`` and the Sphinx warning stream).
 # --------------------------------------------------------------------------- #
+
+
+# Every warning the ``analyse`` layer can emit, as its fully-qualified slug
+# (``codelinks.<group>.<subtype>``). The single source of truth used to expand
+# hierarchical ``suppress_warnings`` entries for Sphinx's flat matcher.
+CODELINKS_WARNING_SLUGS: tuple[str, ...] = (
+    "codelinks.git.root",
+    "codelinks.git.config",
+    "codelinks.git.remote",
+    "codelinks.git.head",
+    "codelinks.git.ref",
+    "codelinks.git.host",
+    "codelinks.marker.too_many_fields",
+    "codelinks.marker.too_few_fields",
+    "codelinks.marker.missing_square_brackets",
+    "codelinks.marker.not_start_or_end_with_square_brackets",
+    "codelinks.marker.newline_in_field",
+)
+
+
+def is_suppressed(slug: str, patterns: Iterable[str]) -> bool:
+    """Return whether ``slug`` is silenced by any of ``patterns``.
+
+    Matching is hierarchical on dot boundaries: a parent silences everything
+    below it (``codelinks`` -> all, ``codelinks.git`` -> the git family,
+    ``codelinks.git.root`` -> just that one). A trailing ``.*`` is accepted as
+    a Sphinx-style alias for the bare parent. ``codelinks.git`` never matches
+    ``codelinks.github`` because matching respects the ``.`` separator.
+    """
+    for pattern in patterns:
+        parent = pattern[:-2] if pattern.endswith(".*") else pattern
+        if slug == parent or slug.startswith(f"{parent}."):
+            return True
+    return False
 
 
 class _Backend(Protocol):

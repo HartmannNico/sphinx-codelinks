@@ -138,3 +138,52 @@ def test_analyse_modules_install_no_handlers_at_import():
         assert module_logger.level == logging.NOTSET, (
             f"{name} pinned its level at import to {module_logger.level}"
         )
+
+
+def test_registry_lists_all_warning_slugs():
+    """The canonical registry names every warning slug analyse can emit."""
+    assert logmod.CODELINKS_WARNING_SLUGS == (
+        "codelinks.git.root",
+        "codelinks.git.config",
+        "codelinks.git.remote",
+        "codelinks.git.head",
+        "codelinks.git.ref",
+        "codelinks.git.host",
+        "codelinks.marker.too_many_fields",
+        "codelinks.marker.too_few_fields",
+        "codelinks.marker.missing_square_brackets",
+        "codelinks.marker.not_start_or_end_with_square_brackets",
+        "codelinks.marker.newline_in_field",
+    )
+
+
+@pytest.mark.parametrize(
+    ("slug", "patterns", "expected"),
+    [
+        # a bare parent silences the whole hierarchy below it
+        ("codelinks.git.root", ["codelinks"], True),
+        ("codelinks.marker.too_many_fields", ["codelinks"], True),
+        # family level silences only that family
+        ("codelinks.git.root", ["codelinks.git"], True),
+        ("codelinks.git.host", ["codelinks.git"], True),
+        ("codelinks.marker.too_many_fields", ["codelinks.git"], False),
+        # matching is on dot boundaries, never a raw string prefix
+        ("codelinks.github", ["codelinks.git"], False),
+        # exact leaf silences only that leaf
+        ("codelinks.git.root", ["codelinks.git.root"], True),
+        ("codelinks.git.host", ["codelinks.git.root"], False),
+        # a trailing ".*" is accepted as a Sphinx-style alias for the parent
+        ("codelinks.git.root", ["codelinks.git.*"], True),
+        ("codelinks.marker.newline_in_field", ["codelinks.*"], True),
+        # no patterns suppress nothing
+        ("codelinks.git.root", [], False),
+        # any matching pattern wins
+        (
+            "codelinks.marker.newline_in_field",
+            ["codelinks.git", "codelinks.marker"],
+            True,
+        ),
+    ],
+)
+def test_is_suppressed(slug, patterns, expected):
+    assert logmod.is_suppressed(slug, patterns) is expected
