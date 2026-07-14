@@ -146,7 +146,7 @@ def is_suppressed(slug: str, patterns: Iterable[str]) -> bool:
     ``codelinks.github`` because matching respects the ``.`` separator.
     """
     for pattern in patterns:
-        parent = pattern[:-2] if pattern.endswith(".*") else pattern
+        parent = pattern.removesuffix(".*")
         if slug == parent or slug.startswith(f"{parent}."):
             return True
     return False

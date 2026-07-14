@@ -166,9 +166,7 @@ def test_analyse_strict_exits_one_on_a_surviving_warning(
     """--strict turns a surviving warning into exit 1, like ``sphinx-build -W``.
     Git warnings are suppressed so the marker warning is the deterministic
     trigger regardless of the checkout's git layout."""
-    config_file = _oneline_warning_config(
-        tmp_path, suppress_warnings=["codelinks.git"]
-    )
+    config_file = _oneline_warning_config(tmp_path, suppress_warnings=["codelinks.git"])
     result = runner.invoke(app, ["analyse", str(config_file), flag])
     assert result.exit_code == 1
 
@@ -195,9 +193,7 @@ def test_analyse_strict_still_fails_when_a_different_slug_is_suppressed(
     assert result.exit_code == 1
 
 
-def _empty_git_repo_config(
-    tmp_path: Path, suppress: list[str] | None = None
-) -> Path:
+def _empty_git_repo_config(tmp_path: Path, suppress: list[str] | None = None) -> Path:
     """A config whose explicit git_root has an empty ``.git`` (forcing git.*
     warnings) over a marker-free source (no marker warnings) — a deterministic
     way to exercise the git-warning arm of --strict."""

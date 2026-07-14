@@ -6,6 +6,7 @@ import pytest
 from sphinx.util.logging import VERBOSE
 
 from sphinx_codelinks import logger as logmod
+from sphinx_codelinks.analyse import utils
 
 
 @pytest.fixture(autouse=True)
@@ -291,8 +292,6 @@ def test_expand_suppress_for_sphinx(entries, expected):
 def test_git_metadata_warnings_use_dotted_codelinks_slugs(tmp_path, capsys):
     """Every git-metadata warning surfaces under ``codelinks.git.<name>`` so it
     is suppressible with the same hierarchical slugs as marker warnings."""
-    from sphinx_codelinks.analyse import utils
-
     logmod.configure_cli()
 
     # git.root: no .git anywhere above the directory

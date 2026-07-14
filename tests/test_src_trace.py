@@ -260,7 +260,7 @@ def test_suppress_warnings_folded_into_sphinx_native(
         "[codelinks]\n"
         'suppress_warnings = ["codelinks.git", "codelinks.marker.too_many_fields"]\n\n'
         "[codelinks.projects.src]\n"
-        'remote_url_pattern = '
+        "remote_url_pattern = "
         '"https://github.com/useblocks/sphinx-codelinks/blob/{commit}/{path}#L{line}"\n'
     )
 

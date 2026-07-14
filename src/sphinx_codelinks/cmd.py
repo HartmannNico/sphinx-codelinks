@@ -71,7 +71,7 @@ OptStrict: TypeAlias = Annotated[  # noqa: UP040 # has to be TypeAlias
 
 
 @app.command(no_args_is_help=True)
-def analyse(  # noqa: PLR0912   # for CLI, so it needs the branches
+def analyse(  # noqa: PLR0912, PLR0913   # a CLI command: many branches and options
     config: Annotated[
         Path,
         typer.Argument(
