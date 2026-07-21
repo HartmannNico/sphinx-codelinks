@@ -44,6 +44,24 @@ SCOPE_NODE_TYPES = {
         "type_declaration",
         "type_spec",
     },
+    # @VHDL Scope Node Types, IMPL_VHDL_4, impl, [FE_VHDL]
+    CommentType.vhdl: {
+        "entity_declaration",
+        "architecture_definition",
+        "package_declaration",
+        "package_definition",  # package body
+        "configuration_declaration",
+        "context_declaration",
+        "component_declaration",
+        "type_declaration",
+        "subprogram_declaration",  # function/procedure prototype
+        "subprogram_definition",  # function/procedure body
+        "process_statement",
+        "block_statement",
+        "for_generate_statement",
+        "if_generate_statement",
+        "case_generate_statement",
+    },
 }
 
 logger = get_logger(__name__)
@@ -74,6 +92,11 @@ GO_QUERY = """
     (comment) @comment
 """
 JSONC_QUERY = """(comment) @comment"""
+# @VHDL comment query for tree-sitter, IMPL_VHDL_3, impl, [FE_VHDL]
+VHDL_QUERY = """
+    (line_comment) @comment
+    (block_comment) @comment
+"""
 
 # JSON value node types that can be associated with a comment.
 JSON_STRUCTURE_TYPES = {
@@ -103,7 +126,7 @@ def is_text_file(filepath: Path, sample_size: int = 2048) -> bool:
         return False
 
 
-# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC]
+# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC, FE_VHDL]
 def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
     if comment_type == CommentType.cpp:
         import tree_sitter_cpp  # noqa: PLC0415
@@ -140,6 +163,11 @@ def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
 
         parsed_language = Language(tree_sitter_json.language())
         query = Query(parsed_language, JSONC_QUERY)
+    elif comment_type == CommentType.vhdl:
+        import tree_sitter_vhdl  # noqa: PLC0415
+
+        parsed_language = Language(tree_sitter_vhdl.language())
+        query = Query(parsed_language, VHDL_QUERY)
     else:
         raise ValueError(f"Unsupported comment style: {comment_type}")
     parser = Parser(parsed_language)
@@ -191,7 +219,9 @@ def find_next_scope(
         if current.type in scope_types:
             return current
         current: TreeSitterNode | None = current.next_named_sibling  # type: ignore[no-redef]  # required for node traversal
-        if current and current.type == "block":
+        # "block" wraps Python/C statements; "design_unit" wraps a VHDL
+        # entity/architecture/package together with its context clauses.
+        if current and current.type in {"block", "design_unit"}:
             for child in current.named_children:
                 if child.type in scope_types:
                     return child

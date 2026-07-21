@@ -13,6 +13,7 @@ COMMENT_FILETYPE = {
     "rust": ["rs"],
     "go": ["go"],
     "jsonc": ["jsonc", "json"],
+    "vhdl": ["vhd", "vhdl"],
 }
 
 
@@ -27,6 +28,8 @@ class CommentType(str, Enum):
     go = "go"
     # @Support JSONC style comments, IMPL_JSONC_1, impl, [FE_JSONC];
     jsonc = "jsonc"
+    # @Support VHDL style comments, IMPL_VHDL_1, impl, [FE_VHDL];
+    vhdl = "vhdl"
 
 
 class SourceDiscoverSectionConfigType(TypedDict, total=False):

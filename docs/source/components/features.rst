@@ -234,6 +234,32 @@ Features
    .. fault:: Sphinx-codelinks hallucinates traceability objects in JSONC
       :id: FAULT_JSONC_2
 
+.. feature:: VHDL Language Support
+   :id: FE_VHDL
+
+   Support for defining traceability objects in VHDL source files via one-line comment annotations.
+
+   The VHDL language parser leverages tree-sitter to accurately identify and extract
+   comments from VHDL source files, including single-line (``--``) and VHDL-2008
+   multi-line (``/* */``) comment styles. This ensures that traceability markers are
+   correctly associated with the appropriate design units such as entities,
+   architectures, packages, processes, and subprograms.
+
+   Key capabilities:
+
+   * Detection of inline and block comments
+   * Association of comments with entities, architectures, packages, configurations,
+     components, types, processes, subprograms, and generate/block statements
+   * Support for standard VHDL comment conventions
+   * Accurate scope detection for nested structures
+   * File extensions ``.vhd`` and ``.vhdl`` auto-discovered when ``comment_type = "vhdl"``
+
+   .. fault:: Traceability objects are not detected in VHDL
+      :id: FAULT_VHDL_1
+
+   .. fault:: Sphinx-codelinks hallucinates traceability objects in VHDL
+      :id: FAULT_VHDL_2
+
 .. feature:: Customized comment styles
    :id: FE_CMT
 

@@ -271,7 +271,7 @@ Specifies the comment syntax style used in the source code files. This determine
 
 **Type:** ``str``
 **Default:** ``"cpp"``
-**Supported values:** ``"cpp"``, ``"python"``, ``"cs"``, ``"yaml"``, ``"rust"``, ``"go"``, ``"jsonc"``
+**Supported values:** ``"cpp"``, ``"python"``, ``"cs"``, ``"yaml"``, ``"rust"``, ``"go"``, ``"jsonc"``, ``"vhdl"``
 
 .. code-block:: toml
 
@@ -326,6 +326,11 @@ Specifies the comment syntax style used in the source code files. This determine
        ``/* */`` (multi-line)
      - ``.jsonc`` (always); ``.json`` only when the file opens with a comment
        (e.g. the mode line ``// -*- mode: jsonc -*-``)
+   * - VHDL
+     - ``"vhdl"``
+     - ``--`` (single-line),
+       ``/* */`` (multi-line, VHDL-2008)
+     - ``.vhd``, ``.vhdl``
 
 .. note:: Future versions may support additional programming languages.
 

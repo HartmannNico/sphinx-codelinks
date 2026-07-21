@@ -3,6 +3,17 @@
 Changelog
 =========
 
+Upcoming
+--------
+
+New and Improved
+................
+
+- ✨ Added VHDL parser for the ``analyse`` module.
+
+  Need ID references and one-line need definitions can now be extracted from VHDL source files
+  (``.vhd``, ``.vhdl``). The supported comment styles are ``--`` and the VHDL-2008 ``/* */``.
+
 .. _`release:1.3.0`:
 
 1.3.0
