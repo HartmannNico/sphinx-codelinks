@@ -54,6 +54,11 @@ SCOPE_NODE_TYPES = {
     },
     # @Bash Scope Node Types, IMPL_BASH_2, impl, [FE_BASH]
     CommentType.bash: {"function_definition"},
+    # Markdown has no function/class scopes relevant for code traceability.
+    # oneline markers in Markdown are always standalone html_block nodes;
+    # scope association (find_enclosing_scope / find_next_scope) is never
+    # invoked when get_oneline_needs=True and get_need_id_refs=False.
+    # CommentType.markdown is intentionally absent from this table.
 }
 
 logger = get_logger(__name__)
@@ -88,6 +93,12 @@ GO_QUERY = """
 JSONC_QUERY = """(comment) @comment"""
 # @Bash comment query for tree-sitter, IMPL_BASH_3, impl, [FE_BASH]
 BASH_QUERY = """(comment) @comment"""
+# @Markdown HTML-comment query for tree-sitter, IMPL_MD_3, impl, [FE_MARKDOWN]
+# Captures block-level HTML *comment* nodes (<!-- … -->) as @comment. html_block
+# also matches non-comment HTML (<div>, <table>, <script>, …); the #match?
+# predicate restricts to nodes that actually start with "<!--" so e.g. a
+# <script>@need-ids: FAKE_1</script> block isn't parsed as a traceability marker.
+MARKDOWN_QUERY = r"""((html_block) @comment (#match? @comment "^[ \t]*<!--"))"""
 
 # JSON value node types that can be associated with a comment.
 JSON_STRUCTURE_TYPES = {
@@ -117,7 +128,7 @@ def is_text_file(filepath: Path, sample_size: int = 2048) -> bool:
         return False
 
 
-# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC, FE_BASH, FE_TS]
+# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC, FE_BASH, FE_TS, FE_MARKDOWN]
 def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
     if comment_type == CommentType.cpp:
         import tree_sitter_cpp  # noqa: PLC0415
@@ -168,6 +179,11 @@ def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
 
         parsed_language = Language(tree_sitter_bash.language())
         query = Query(parsed_language, BASH_QUERY)
+    elif comment_type == CommentType.markdown:
+        import tree_sitter_markdown  # noqa: PLC0415
+
+        parsed_language = Language(tree_sitter_markdown.language())
+        query = Query(parsed_language, MARKDOWN_QUERY)
     else:
         raise ValueError(f"Unsupported comment style: {comment_type}")
     parser = Parser(parsed_language)

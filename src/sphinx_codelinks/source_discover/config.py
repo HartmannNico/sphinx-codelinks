@@ -25,6 +25,12 @@ COMMENT_FILETYPE = {
     # PyPI, so it cannot be wired in here. Track fish separately if a PyPI
     # grammar becomes available.
     "bash": ["sh", "bash", "zsh", "ksh"],
+    # Markdown uses block-level HTML comments `<!-- @needs … -->` as traceability
+    # markers. tree-sitter-markdown captures them as `html_block` nodes.
+    # NOTE: because the node text includes the `<!-- … -->` delimiters, callers
+    # must set `end_sequence: " -->"` (not the default `"\n"`) in their
+    # oneline_comment_style config to prevent `-->` from leaking into parsed fields.
+    "markdown": ["md", "markdown"],
 }
 
 
@@ -43,6 +49,8 @@ class CommentType(str, Enum):
     jsonc = "jsonc"
     # @Support Bash style comments, IMPL_BASH_1, impl, [FE_BASH];
     bash = "bash"
+    # @Support Markdown HTML-comment style, IMPL_MD_1, impl, [FE_MARKDOWN]
+    markdown = "markdown"
 
 
 class SourceDiscoverSectionConfigType(TypedDict, total=False):
