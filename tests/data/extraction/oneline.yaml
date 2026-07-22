@@ -82,3 +82,10 @@ jsx_oneliner_tsx:
         */}
       </div>
     );
+
+default_oneliner_markdown:
+  lang: markdown
+  config:
+    end_sequence: " -->"
+  source: |
+    <!-- @Md Title, IMPL_MD, impl, [REQ_MD] -->

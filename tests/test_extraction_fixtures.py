@@ -43,6 +43,7 @@ LANG_MAP: dict[str, tuple[CommentType, str]] = {
     # What this case pins: a marker on its own line inside a multi-line JSX
     # block comment anchors to that line.
     "tsx": (CommentType.ts, "tsx"),
+    "markdown": (CommentType.markdown, "md"),
 }
 
 

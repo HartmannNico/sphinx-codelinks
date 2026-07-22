@@ -11,6 +11,7 @@ import tree_sitter_c_sharp
 import tree_sitter_cpp
 import tree_sitter_go
 import tree_sitter_json
+import tree_sitter_markdown
 import tree_sitter_python
 import tree_sitter_rust
 import tree_sitter_typescript
@@ -93,6 +94,53 @@ def init_bash_tree_sitter() -> tuple[Parser, Query]:
     query = Query(parsed_language, utils.BASH_QUERY)
     parser = Parser(parsed_language)
     return parser, query
+
+
+@pytest.fixture(scope="session")
+def init_markdown_tree_sitter() -> tuple[Parser, Query]:
+    parsed_language = Language(tree_sitter_markdown.language())
+    query = Query(parsed_language, utils.MARKDOWN_QUERY)
+    parser = Parser(parsed_language)
+    return parser, query
+
+
+@pytest.mark.parametrize(
+    ("code", "expected_count"),
+    [
+        # standalone block HTML comment is captured
+        (
+            b"<!-- @Md Title, IMPL_MD, impl, [REQ_MD] -->\n",
+            1,
+        ),
+        # multiple HTML comment blocks are each captured
+        (
+            b"<!-- @Md1, IMPL_MD_1, impl, [REQ_1] -->\n\nSome paragraph.\n\n<!-- @Md2, IMPL_MD_2, impl, [REQ_2] -->\n",
+            2,
+        ),
+        # paragraph text without HTML comment produces no comments
+        (
+            b"# Heading\n\nJust a paragraph with no markers.\n",
+            0,
+        ),
+    ],
+)
+def test_extract_comments_markdown(code, expected_count, init_markdown_tree_sitter):
+    parser, query = init_markdown_tree_sitter
+    comments = utils.extract_comments(code, parser, query) or []
+    assert len(comments) == expected_count
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        b"<!-- @Md Title, IMPL_MD, impl, [REQ_MD] -->\n",
+    ],
+)
+def test_init_tree_sitter_markdown(code):
+    """init_tree_sitter returns a working parser/query pair for markdown."""
+    parser, query = utils.init_tree_sitter(CommentType.markdown)
+    comments = utils.extract_comments(code, parser, query)
+    assert len(comments) == 1
 
 
 @pytest.mark.parametrize(
