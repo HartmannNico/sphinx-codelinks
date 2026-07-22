@@ -271,7 +271,7 @@ Specifies the comment syntax style used in the source code files. This determine
 
 **Type:** ``str``
 **Default:** ``"cpp"``
-**Supported values:** ``"cpp"``, ``"python"``, ``"cs"``, ``"yaml"``, ``"rust"``, ``"go"``, ``"jsonc"``, ``"bash"``
+**Supported values:** ``"cpp"``, ``"python"``, ``"cs"``, ``"yaml"``, ``"rust"``, ``"go"``, ``"jsonc"``, ``"bash"``, ``"markdown"``
 
 .. code-block:: toml
 
@@ -330,6 +330,10 @@ Specifies the comment syntax style used in the source code files. This determine
      - ``"bash"``
      - ``#`` (single-line)
      - ``.sh``, ``.bash``, ``.zsh``, ``.ksh``
+   * - Markdown
+     - ``"markdown"``
+     - ``<!-- … -->`` (HTML-comment block)
+     - ``.md``, ``.markdown``
 
 .. note:: Future versions may support additional programming languages.
 

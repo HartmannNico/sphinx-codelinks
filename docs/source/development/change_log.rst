@@ -3,6 +3,21 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+New and Improved
+................
+
+- ✨ Added Markdown language support for the ``analyse`` module.
+
+  Standalone HTML-comment blocks (``<!-- @needs … -->``) in Markdown files are
+  now parsed for need ID references and one-line need definitions. ``.md`` and
+  ``.markdown`` files are discovered when ``comment_type = "markdown"``.
+  Because ``tree-sitter-markdown`` exposes HTML comments as ``html_block``
+  nodes, callers must set ``end_sequence: " -->"`` in their
+  ``oneline_comment_style`` configuration.
+
 .. _`release:1.4.0`:
 
 1.4.0

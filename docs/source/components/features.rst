@@ -266,6 +266,41 @@ Features
    .. fault:: Sphinx-codelinks hallucinates traceability objects in Bash
       :id: FAULT_BASH_2
 
+.. feature:: Markdown Language Support
+   :id: FE_MARKDOWN
+
+   Support for defining traceability objects in Markdown files using
+   HTML-comment markers (``<!-- @needs … -->``).
+
+   The Markdown language parser leverages tree-sitter to identify and extract
+   standalone HTML-comment blocks from Markdown documents, enabling
+   requirements traceability in agent definition files, skill files, and other
+   Markdown-based implementation artefacts.
+
+   ``.md`` and ``.markdown`` files are auto-discovered when
+   ``comment_type = "markdown"``. Because tree-sitter-markdown exposes
+   standalone HTML comments as ``html_block`` nodes, only block-level
+   ``<!-- … -->`` markers are captured; inline HTML comments inside paragraphs
+   are not.
+
+   Key capabilities:
+
+   * HTML-comment (``<!-- … -->``) detection via tree-sitter
+   * Auto-discovery of ``.md`` and ``.markdown`` files
+   * Oneline-only mode (no scope association needed)
+
+   .. note::
+
+      Because the captured node text includes the full ``<!-- … -->``
+      delimiters, callers must set ``end_sequence: " -->"`` (not the default
+      ``"\n"``) in their ``oneline_comment_style`` config.
+
+   .. fault:: Traceability objects are not detected in Markdown
+      :id: FAULT_MARKDOWN_1
+
+   .. fault:: Sphinx-codelinks hallucinates traceability objects in Markdown
+      :id: FAULT_MARKDOWN_2
+
 .. feature:: Preprocessor-Aware C/C++ Extraction
    :id: FE_PREPROC
 
