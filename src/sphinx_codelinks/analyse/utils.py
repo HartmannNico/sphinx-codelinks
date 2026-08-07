@@ -28,6 +28,7 @@ SCOPE_NODE_TYPES = {
     # @C and C++ Scope Node Types, IMPL_C_2, impl, [FE_C_SUPPORT, FE_CPP]
     CommentType.cpp: {"function_definition", "class_definition"},
     CommentType.cs: {"method_declaration", "class_declaration", "property_declaration"},
+    # @TypeScript Scope Node Types, IMPL_TS_2, impl, [FE_TS]
     CommentType.ts: {
         "function_declaration",
         "class_declaration",
@@ -73,6 +74,7 @@ PYTHON_QUERY = """
             """
 CPP_QUERY = """(comment) @comment"""
 C_SHARP_QUERY = """(comment) @comment"""
+# @TypeScript comment query for tree-sitter, IMPL_TS_3, impl, [FE_TS]
 TYPE_SCRIPT_QUERY = """(comment) @comment"""
 YAML_QUERY = """(comment) @comment"""
 RUST_QUERY = """
@@ -115,7 +117,7 @@ def is_text_file(filepath: Path, sample_size: int = 2048) -> bool:
         return False
 
 
-# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC, FE_BASH]
+# @Tree-sitter parser initialization for multiple languages, IMPL_LANG_1, impl, [FE_C_SUPPORT, FE_CPP, FE_PY, FE_YAML, FE_RUST, FE_GO, FE_JSONC, FE_BASH, FE_TS]
 def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
     if comment_type == CommentType.cpp:
         import tree_sitter_cpp  # noqa: PLC0415

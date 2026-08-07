@@ -266,6 +266,32 @@ Features
    .. fault:: Sphinx-codelinks hallucinates traceability objects in Bash
       :id: FAULT_BASH_2
 
+.. feature:: TypeScript Language Support
+   :id: FE_TS
+
+   Support for defining traceability objects in TypeScript source files via one-line
+   comment annotations.
+
+   The TypeScript language parser leverages tree-sitter to accurately identify and
+   extract comments from TypeScript sources, including single-line (``//``) and
+   multi-line (``/* */``) comment styles. All files are parsed with the TSX
+   grammar — a strict superset of the TypeScript grammar — so ``.tsx`` files
+   (including JSX comments such as ``{/* ... */}``) need no per-file grammar choice.
+
+   Key capabilities:
+
+   * Detection of inline and block comments
+   * Association of comments with function, class, and method declarations
+   * ``const``/``let``/``var`` declarations count as scopes only when they assign
+     a function or arrow function
+   * File extensions ``.ts`` and ``.tsx`` auto-discovered when ``comment_type = "ts"``
+
+   .. fault:: Traceability objects are not detected in TypeScript language
+      :id: FAULT_TS_1
+
+   .. fault:: Sphinx-codelinks hallucinates traceability objects in TypeScript
+      :id: FAULT_TS_2
+
 .. feature:: Preprocessor-Aware C/C++ Extraction
    :id: FE_PREPROC
 

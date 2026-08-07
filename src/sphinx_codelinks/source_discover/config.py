@@ -27,6 +27,7 @@ class CommentType(str, Enum):
     python = "python"
     cpp = "cpp"
     cs = "cs"
+    # @Support TypeScript style comments, IMPL_TS_1, impl, [FE_TS];
     ts = "ts"
     yaml = "yaml"
     # @Support Rust style comments, IMPL_RUST_1, impl, [FE_RUST];
