@@ -234,6 +234,74 @@ Features
    .. fault:: Sphinx-codelinks hallucinates traceability objects in JSONC
       :id: FAULT_JSONC_2
 
+.. feature:: Bash Language Support
+   :id: FE_BASH
+
+   Support for defining traceability objects in Bash and POSIX-shell scripts.
+
+   The Bash language parser leverages tree-sitter to identify and extract
+   single-line (``#``) comments from shell scripts, associating each marker with
+   the surrounding function definition it annotates.
+
+   ``.sh``, ``.bash``, ``.zsh``, and ``.ksh`` files are auto-discovered when
+   ``comment_type = "bash"``. zsh and ksh share Bash's ``#`` comment syntax and
+   are parsed with the same grammar.
+
+   Key capabilities:
+
+   * Hash-style comment (``#``) detection
+   * Association of comments with function definitions
+   * Support for standard shell comment conventions
+   * Shebang lines (``#!/bin/bash``) never produce spurious markers
+
+   .. note::
+
+      Fish shell is not supported. Fish is not POSIX-compatible and no
+      ``tree-sitter-fish`` grammar is published on PyPI, so it cannot be wired
+      into the Python package.
+
+   .. fault:: Traceability objects are not detected in Bash language
+      :id: FAULT_BASH_1
+
+   .. fault:: Sphinx-codelinks hallucinates traceability objects in Bash
+      :id: FAULT_BASH_2
+
+.. feature:: Preprocessor-Aware C/C++ Extraction
+   :id: FE_PREPROC
+
+   Extract traceability objects only from the C/C++ preprocessor branches that are
+   actually compiled.
+
+   The default tree-sitter parser sees every comment in a file, regardless of conditional
+   compilation, so a project using ``#ifdef`` variants yields traceability objects from
+   *all* branches — including branches that are never built. The optional libclang engine
+   parses each file as a real translation unit, evaluates the preprocessor, and drops
+   comments inside inactive regions. Objects in active branches keep their original line
+   numbers, so source links stay accurate without any source transformation.
+
+   Key capabilities:
+
+   * Evaluation of ``#if`` / ``#ifdef`` / ``#else`` regions to determine active branches
+   * Per-file compiler flag resolution from a ``compile_commands.json`` compilation database
+   * Walk-up discovery of the compilation database from the source file
+   * Standalone parsing of headers, which a compilation database never lists, using
+     configured ``defines``, ``includes`` and ``std``
+   * Opt-in via the :ref:`analyse.preprocessor <preprocessor_config>` configuration table
+   * Graceful behavior when the optional ``libclang`` dependency is absent
+
+   See :ref:`preprocessor_engine` for the conceptual overview and header handling.
+
+   .. fault:: Traceability objects in inactive preprocessor branches are extracted
+      :id: FAULT_PREPROC_1
+
+   .. fault:: Traceability objects in active preprocessor branches are dropped
+      :id: FAULT_PREPROC_2
+
+   .. fault:: Compiler flags are resolved from the wrong compilation database entry
+      :id: FAULT_PREPROC_3
+
+      The wrong set of ``-D`` macros makes libclang evaluate the wrong branches as active.
+
 .. feature:: Customized comment styles
    :id: FE_CMT
 
