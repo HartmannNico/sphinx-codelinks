@@ -37,8 +37,11 @@ LANG_MAP: dict[str, tuple[CommentType, str]] = {
     "jsonc": (CommentType.jsonc, "jsonc"),
     "bash": (CommentType.bash, "sh"),
     "typescript": (CommentType.ts, "ts"),
-    # `.tsx` runs the same TSX grammar; the distinct extension + JSX source
-    # exercises the superset-grammar decision end to end.
+    # `.tsx` is documentary: extraction never reads the file suffix, and the
+    # plain-TS and TSX grammars lex comments identically (the TSX-grammar
+    # choice is pinned by test_analyse_utils.py's has_error check instead).
+    # What this case pins: a marker on its own line inside a multi-line JSX
+    # block comment anchors to that line.
     "tsx": (CommentType.ts, "tsx"),
 }
 
