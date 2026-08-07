@@ -36,6 +36,10 @@ LANG_MAP: dict[str, tuple[CommentType, str]] = {
     "go": (CommentType.go, "go"),
     "jsonc": (CommentType.jsonc, "jsonc"),
     "bash": (CommentType.bash, "sh"),
+    "typescript": (CommentType.ts, "ts"),
+    # `.tsx` runs the same TSX grammar; the distinct extension + JSX source
+    # exercises the superset-grammar decision end to end.
+    "tsx": (CommentType.ts, "tsx"),
 }
 
 

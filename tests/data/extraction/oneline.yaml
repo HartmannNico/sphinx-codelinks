@@ -57,3 +57,28 @@ shebang_oneliner_bash:
     #!/bin/bash
     # @Bash Title, IMPL_BASH_SHEBANG, impl, [REQ_BASH]
     function greet { echo hi; }
+
+default_oneliner_typescript:
+  lang: typescript
+  config: default
+  source: |
+    // @Ts Title, IMPL_TS, impl, [REQ_TS]
+    function f(): void {}
+
+# a JSX comment ({/* ... */}) is an ordinary block-comment node in the TSX
+# grammar; the marker inside one must extract like any /* */ comment. The
+# marker sits on its own line: with the default newline end_sequence, a
+# marker sharing a line with the closing */ swallows the */ into its last
+# field (pre-existing engine behavior; deliberately not exercised by the
+# shared fixtures)
+jsx_oneliner_tsx:
+  lang: tsx
+  config: default
+  source: |
+    const App = () => (
+      <div>
+        {/*
+          @Tsx Title, IMPL_TSX, impl, [REQ_TSX]
+        */}
+      </div>
+    );
