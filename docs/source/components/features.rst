@@ -269,14 +269,15 @@ Features
 .. feature:: TypeScript Language Support
    :id: FE_TS
 
-   Support for defining traceability objects in TypeScript source files via one-line
-   comment annotations.
+   Support for defining traceability objects in TypeScript and JavaScript source
+   files via one-line comment annotations.
 
    The TypeScript language parser leverages tree-sitter to accurately identify and
-   extract comments from TypeScript sources, including single-line (``//``) and
-   multi-line (``/* */``) comment styles. All files are parsed with the TSX
-   grammar — a strict superset of the TypeScript grammar — so ``.tsx`` files
-   (including JSX comments such as ``{/* ... */}``) need no per-file grammar choice.
+   extract comments from TypeScript and JavaScript sources, including single-line
+   (``//``) and multi-line (``/* */``) comment styles. All files are parsed with
+   the TSX grammar — a strict superset of the TypeScript grammar, which is in turn
+   a superset of JavaScript — so ``.tsx`` files (including JSX comments such as
+   ``{/* ... */}``) and plain JavaScript sources need no per-file grammar choice.
 
    Key capabilities:
 
@@ -284,7 +285,8 @@ Features
    * Association of comments with function, class, and method declarations
    * ``const``/``let``/``var`` declarations count as scopes only when they assign
      a function or arrow function
-   * File extensions ``.ts`` and ``.tsx`` auto-discovered when ``comment_type = "ts"``
+   * File extensions ``.ts``, ``.tsx``, ``.mts``, ``.cts``, ``.js``, ``.jsx``,
+     ``.mjs`` and ``.cjs`` auto-discovered when ``comment_type = "ts"``
 
    .. fault:: Traceability objects are not detected in TypeScript language
       :id: FAULT_TS_1

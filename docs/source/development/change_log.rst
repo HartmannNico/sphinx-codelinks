@@ -11,8 +11,10 @@ New and Improved
 
 - ✨ Added TypeScript comment type support for source discovery and analysis.
 
-  TypeScript files can now be processed using ``comment_type = "ts"``.
-  Source discovery supports both ``.ts`` and ``.tsx`` extensions by default.
+  TypeScript and JavaScript files can now be processed using ``comment_type = "ts"``,
+  since the TSX grammar used to parse them is a superset of both languages.
+  Source discovery supports ``.ts``, ``.tsx``, ``.mts``, ``.cts``, ``.js``,
+  ``.jsx``, ``.mjs`` and ``.cjs`` extensions by default.
 
 .. _`release:1.4.0`:
 

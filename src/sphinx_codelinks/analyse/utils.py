@@ -137,9 +137,10 @@ def init_tree_sitter(comment_type: CommentType) -> tuple[Parser, Query]:
     elif comment_type == CommentType.ts:
         import tree_sitter_typescript  # noqa: PLC0415
 
-        # The TSX grammar is a strict superset of the TypeScript grammar (it also
-        # parses plain .ts fine), so use it for both to support .tsx files without
-        # needing a per-file grammar choice.
+        # The TSX grammar is a strict superset of the TypeScript grammar, which is
+        # itself a superset of JavaScript, so it also parses plain .ts and the
+        # whole JavaScript family fine. Use it for all of them to avoid needing a
+        # per-file grammar choice.
         parsed_language = Language(tree_sitter_typescript.language_tsx())
         query = Query(parsed_language, TYPE_SCRIPT_QUERY)
     elif comment_type == CommentType.yaml:

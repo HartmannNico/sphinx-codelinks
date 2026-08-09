@@ -9,7 +9,12 @@ COMMENT_FILETYPE = {
     "cpp": ["c", "ci", "cpp", "cc", "cxx", "h", "hpp", "hxx", "hh", "ihl"],
     "python": ["py"],
     "cs": ["cs"],
-    "ts": ["ts", "tsx"],
+    # ".mts"/".cts" are TypeScript's own ESM/CJS module variants. ".js"/".jsx"/
+    # ".mjs"/".cjs" are JavaScript, covered by the same comment type because the
+    # TSX grammar used to parse "ts" sources is a strict superset of the
+    # TypeScript grammar, which is itself a superset of JavaScript, so no
+    # separate grammar or comment_type value is needed.
+    "ts": ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"],
     "yaml": ["yml", "yaml"],
     "rust": ["rs"],
     "go": ["go"],
