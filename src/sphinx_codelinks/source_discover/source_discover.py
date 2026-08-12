@@ -87,11 +87,15 @@ class SourceDiscover:
             builder.overrides(override_builder.build())
 
         discovered_files = []
+        # When include patterns are provided the caller has explicitly selected
+        # which files to scan; extension-based filtering would silently drop
+        # extensionless files like .folder or .gitignore.
+        has_explicit_include = bool(self.src_discover_config.include)
         for entry in builder.build():
             filepath = entry.path()
             if not filepath.is_file():
                 continue
-            if self.file_types and filepath.suffix.lower() not in self.file_types:
+            if self.file_types and not has_explicit_include and filepath.suffix.lower() not in self.file_types:
                 continue
             # @JSONC .json files require a leading comment, IMPL_JSONC_3, impl, [FE_JSONC]
             # A plain ``.json`` file is only treated as JSONC when it opens with a
